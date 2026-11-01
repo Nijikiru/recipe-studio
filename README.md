@@ -132,14 +132,15 @@ node server.mjs 5178
 ```
 recipe-studio/
 ├── index.html              # 页面结构
-├── styles.css              # 样式（含暖棕夜间模式 / 响应式 / 打印样式）
+├── styles.css              # 样式（含深夜蓝紫夜间模式 / 响应式 / 打印样式）
 ├── app.js                  # 勾选、匹配打分、人数换算、厨具调料过滤、心情筛选、导入、弹窗、收藏
 ├── data/recipes.js         # 47 道菜 + 58 种食材
 ├── data/requirements.js    # 厨具 / 调料目录 + 每道菜的厨具需求与油盐 GI 等级
 ├── server.mjs              # 零依赖本地静态服务器
-├── tools/shot.mjs          # 开发用：无头 Chrome 截图 + 交互自检脚本
-└── .shots/                 # 自检截图
+└── .shots/                 # 截图
 ```
+
+> 开发用的无头浏览器自检脚本（`tools/shot.mjs`）和部署脚本（`tools/deploy.mjs`）只在本地保留，没有上传到仓库。
 
 ## 说明
 
