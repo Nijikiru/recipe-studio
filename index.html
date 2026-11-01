@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>大菜谱吃吃吃 · 勾选食材，生成今晚的菜</title>
+  <meta name="description" content="勾选冰箱里现有的食材、填上吃饭人数，立刻得到可照着做的菜谱教程和按人数换算好的用量。" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍳</text></svg>" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-mark">🍳</span>
+      <div>
+        <h1>大菜谱吃吃吃</h1>
+        <p>勾选冰箱里现有的食材，按人数换算，直接照着做</p>
+      </div>
+    </div>
+    <div class="topbar-actions">
+      <button class="icon-btn" id="themeBtn" type="button" title="切换深色模式" aria-label="切换深色模式">🌙</button>
+      <button class="icon-btn" id="favFilterBtn" type="button" title="只看收藏" aria-label="只看收藏">♡</button>
+    </div>
+  </header>
+
+  <main class="layout">
+    <aside class="picker" id="picker">
+      <section class="panel servings-panel">
+        <div class="panel-head">
+          <span class="step-dot">1</span>
+          <h2>吃饭人数</h2>
+        </div>
+        <div class="stepper">
+          <button type="button" id="minus" aria-label="减少人数">−</button>
+          <label class="stepper-value">
+            <input id="servings" type="number" min="1" max="12" value="2" inputmode="numeric" aria-label="吃饭人数" />
+            <span>人</span>
+          </label>
+          <button type="button" id="plus" aria-label="增加人数">＋</button>
+        </div>
+        <p class="hint" id="servingsHint">用量会按 2 人份换算</p>
+      </section>
+
+      <section class="panel ingredient-panel">
+        <div class="panel-head">
+          <span class="step-dot">2</span>
+          <h2>有哪些食材</h2>
+          <span class="picked-badge" id="pickedBadge">已选 0</span>
+        </div>
+        <div class="search-wrap">
+          <span aria-hidden="true">🔍</span>
+          <input id="search" type="search" placeholder="搜索食材，如：番茄 / 豆腐" autocomplete="off" />
+          <button type="button" id="clearPicked" class="text-btn" title="清空已选">清空</button>
+        </div>
+        <div class="quick-actions">
+          <button type="button" class="text-btn" id="pickCommon">常用 6 样</button>
+          <button type="button" class="text-btn" id="pickVeg">全选蔬菜</button>
+          <button type="button" class="text-btn" id="pickMeat">全选肉蛋</button>
+        </div>
+        <div id="groups" class="groups"></div>
+        <p class="hint pantry-hint">食材每次重新挑；炊具和调味料在第 3、4 步，勾一次就长期记住。</p>
+      </section>
+
+      <section class="panel gear-panel">
+        <div class="panel-head">
+          <span class="step-dot">3</span>
+          <h2>厨房装备</h2>
+          <span class="picked-badge" id="gearBadge">未设置</span>
+        </div>
+        <p class="hint">勾一次长期保存。没有的别勾，需要它的菜会被自动排除。</p>
+        <div class="quick-actions">
+          <button type="button" class="text-btn" id="gearAll">我都有</button>
+          <button type="button" class="text-btn" id="gearNone">清空</button>
+        </div>
+        <div class="chips" id="gearChips"></div>
+      </section>
+
+      <section class="panel pantry-panel">
+        <div class="panel-head">
+          <span class="step-dot">4</span>
+          <h2>常备调味料</h2>
+          <span class="picked-badge" id="pantryBadge">全有</span>
+        </div>
+        <p class="hint">长期保存。默认都当作家里有，缺哪样就取消勾选。</p>
+        <div class="quick-actions">
+          <button type="button" class="text-btn" id="pantryAll">全部都有</button>
+          <button type="button" class="text-btn" id="pantryNone">都没有</button>
+        </div>
+        <div class="chips" id="pantryChips"></div>
+      </section>
+    </aside>
+
+    <section class="results">
+      <div class="actionbar">
+        <button type="button" class="primary" id="generate">
+          <span>生成推荐菜谱</span>
+          <span class="primary-count" id="generateCount"></span>
+        </button>
+        <button type="button" class="ghost" id="comboBtn" title="自动搭配一荤一素一汤">🍽 一键配一桌</button>
+        <button type="button" class="ghost" id="randomBtn" title="随机来一道">🎲 随便来一道</button>
+        <button type="button" class="ghost" id="importBtn" title="粘贴小红书等平台的菜谱文案">📥 导入菜谱</button>
+      </div>
+
+      <div class="filters">
+        <div class="filter-row" id="moodRow" role="group" aria-label="当前心情">
+          <span class="filter-label">心情</span>
+          <div class="chips-line" id="moodChips"></div>
+        </div>
+        <div class="filter-row" id="cuisineRow" role="group" aria-label="菜系筛选">
+          <span class="filter-label">菜系</span>
+          <div class="chips-line" id="cuisineChips"></div>
+        </div>
+        <div class="filter-row">
+          <span class="filter-label">时间</span>
+          <div class="chips-line" id="timeChips">
+            <button type="button" class="pill" data-time="15">15 分钟内</button>
+            <button type="button" class="pill" data-time="30">30 分钟内</button>
+            <button type="button" class="pill is-on" data-time="999">不限</button>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="readyOnly" />
+            <span>只看食材齐全的</span>
+          </label>
+        </div>
+        <div class="filter-row">
+          <span class="filter-label">清淡</span>
+          <div class="chips-line" id="healthChips">
+            <button type="button" class="pill" data-health="oil">少油</button>
+            <button type="button" class="pill" data-health="salt">少盐</button>
+            <button type="button" class="pill" data-health="gi">低 GI</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="combo" class="combo hidden"></div>
+
+      <div class="result-head">
+        <h2 id="resultTitle">今晚吃什么？</h2>
+        <p id="summary">先在左边勾几样食材，再点「生成推荐菜谱」。</p>
+      </div>
+
+      <div id="cards" class="cards"></div>
+
+      <div id="empty" class="empty">
+        <div class="empty-emoji">🧺</div>
+        <h3>冰箱里有什么？</h3>
+        <p>勾选你手上的食材（比如番茄、鸡蛋、土豆），我们会在 <b id="recipeCount">47</b> 道家常菜里找出最接近能做的那些，并给出按人数换算的用量和分步教程。也可以先选个「心情」，或者把小红书上的菜谱粘进来。</p>
+        <button type="button" class="primary small" id="demoBtn">试试「番茄 + 鸡蛋 + 土豆」</button>
+        <div class="quick-picks" id="quickPicks"></div>
+      </div>
+    </section>
+  </main>
+
+  <div class="mobile-bar" id="mobileBar">
+    <div class="mobile-info"><b id="mbPicked">0</b> 种食材 · <b id="mbServings">2</b> 人</div>
+    <button type="button" class="primary small" id="mobileGenerate">生成菜谱</button>
+  </div>
+
+  <div class="modal hidden" id="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal-backdrop" data-close></div>
+    <article class="sheet" id="sheet"></article>
+  </div>
+
+  <script src="data/recipes.js"></script>
+  <script src="data/requirements.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
